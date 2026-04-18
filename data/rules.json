@@ -1,0 +1,11 @@
+[
+  {
+    "id": "aypquo0j",
+    "pattern": "pattern:^(martinaccess|jerrikacess)\\d{4}$",
+    "flags": "i",
+    "target": "username",
+    "enabled": true,
+    "createdAt": "2026-04-18T22:51:26.198Z",
+    "createdBy": "260716512711540736"
+  }
+]

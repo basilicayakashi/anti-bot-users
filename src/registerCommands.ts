@@ -3,32 +3,32 @@ import { config } from "./config";
 
 const commands = [
   new SlashCommandBuilder()
-    .setName("regex-add")
-    .setDescription("Ajoute une règle regex de ban automatique")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-    .addStringOption((opt) =>
-      opt
-        .setName("pattern")
-        .setDescription("Expression régulière sans les / /")
-        .setRequired(true)
-    )
-    .addStringOption((opt) =>
-      opt
-        .setName("flags")
-        .setDescription("Flags regex, ex: i")
-        .setRequired(false)
-    )
-    .addStringOption((opt) =>
-      opt
-        .setName("target")
-        .setDescription("Champ du compte à vérifier")
-        .setRequired(true)
-        .addChoices(
-          { name: "username", value: "username" },
-          { name: "globalName", value: "globalName" },
-          { name: "displayName", value: "displayName" }
-        )
-    ),
+  .setName("regex-add")
+  .setDescription("Ajoute une règle regex de ban automatique")
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .addStringOption((opt) =>
+    opt
+      .setName("pattern")
+      .setDescription("Expression régulière sans les / /")
+      .setRequired(true)
+  )
+  .addStringOption((opt) =>
+    opt
+      .setName("target")
+      .setDescription("Champ du compte à vérifier")
+      .setRequired(true)
+      .addChoices(
+        { name: "username", value: "username" },
+        { name: "globalName", value: "globalName" },
+        { name: "displayName", value: "displayName" }
+      )
+  )
+  .addStringOption((opt) =>
+    opt
+      .setName("flags")
+      .setDescription("Flags regex, ex: i")
+      .setRequired(false)
+  ),
 
   new SlashCommandBuilder()
     .setName("regex-remove")

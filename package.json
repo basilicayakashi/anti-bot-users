@@ -1,0 +1,22 @@
+{
+  "name": "discord-regex-ban-bot",
+  "version": "1.0.0",
+  "description": "Bot Discord.js TypeScript qui bannit automatiquement les nouveaux membres selon des regex configurables",
+  "main": "dist/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "register": "tsx src/registerCommands.ts"
+  },
+  "dependencies": {
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  }
+}

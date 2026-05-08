@@ -1,7 +1,7 @@
 [
   {
     "id": "aypquo0j",
-    "pattern": "pattern:^(martinaccess|jerrikacess)\\d{4}$",
+    "pattern": "^(martinaccess|jerrikacess)\\d{4}$",
     "flags": "i",
     "target": "username",
     "enabled": true,

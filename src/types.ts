@@ -9,3 +9,7 @@ export interface RegexRule {
   createdAt: string;
   createdBy: string;
 }
+
+export interface BotSettings {
+  NotBeforeInDays: number;
+}

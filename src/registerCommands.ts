@@ -53,6 +53,23 @@ const commands = [
     ),
 
   new SlashCommandBuilder()
+    .setName("settings-get")
+    .setDescription("Affiche les paramètres du bot")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+  new SlashCommandBuilder()
+    .setName("settings-set")
+    .setDescription("Modifie les paramètres du bot")
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addIntegerOption((opt) =>
+      opt
+        .setName("not_before_in_days")
+        .setDescription("Âge minimum du compte en jours. 0 désactive le contrôle.")
+        .setRequired(true)
+        .setMinValue(0)
+    ),
+
+  new SlashCommandBuilder()
     .setName("regex-list")
     .setDescription("Liste les règles regex configurées")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)

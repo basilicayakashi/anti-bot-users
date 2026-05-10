@@ -8,7 +8,7 @@ import {
   PermissionFlagsBits
 } from "discord.js";
 import { config } from "./config";
-import { readRules, writeRules } from "./storage";
+import { readRules, writeRules, readSettings, writeSettings } from "./storage";
 import { RegexRule, RuleTarget } from "./types";
 import { assertValidRegex, generateId, normalizeFlags } from "./utils";
 
@@ -25,9 +25,9 @@ const client = new Client({
   }
 });
 
-async function tryBanMember(member: GuildMember): Promise<void> {
+async function tryBanMember(member: GuildMember): Promise<boolean> {
   const match = findMatchingRule(member);
-  if (!match) return;
+  if (!match) return false;
 
   const reason = `Auto-ban regex rule=${match.rule.id} target=${match.rule.target} value="${match.testedValue}" pattern=/${match.rule.pattern}/${match.rule.flags}`;
 
@@ -40,11 +40,13 @@ async function tryBanMember(member: GuildMember): Promise<void> {
     console.log(
       `[BAN] ${member.user.tag} (${member.id}) | rule=${match.rule.id} | ${match.rule.target}="${match.testedValue}"`
     );
+    return true;
   } catch (err) {
     console.error(
       `Impossible de bannir ${member.user.tag} (${member.id}) avec la règle ${match.rule.id}`,
       err
     );
+    return false;
   }
 }
 
@@ -107,11 +109,48 @@ function setCheckingPresence(): void {
   });
 }
 
+async function tryKickTooYoungAccount(member: GuildMember): Promise<boolean> {
+  const settings = readSettings();
+  const notBeforeInDays = settings.NotBeforeInDays;
+
+  if (notBeforeInDays <= 0) return false;
+
+  const accountAgeMs = Date.now() - member.user.createdTimestamp;
+  const minimumAgeMs = notBeforeInDays * 24 * 60 * 60 * 1000;
+
+  if (accountAgeMs >= minimumAgeMs) return false;
+
+  const accountAgeDays = Math.floor(accountAgeMs / (24 * 60 * 60 * 1000));
+
+  try {
+    await member.kick(
+      `Compte trop récent: ${accountAgeDays} jour(s), minimum requis: ${notBeforeInDays} jour(s)`
+    );
+
+    console.log(
+      `[KICK] ${member.user.tag} (${member.id}) | compte=${accountAgeDays}j | minimum=${notBeforeInDays}j`
+    );
+
+    return true;
+  } catch (err) {
+    console.error(
+      `Impossible de kick ${member.user.tag} (${member.id}) pour compte trop récent`,
+      err
+    );
+
+    return false;
+  }
+}
+
 client.on(Events.GuildMemberAdd, async (member) => {
   setCheckingPresence();
 
   try {
-    await tryBanMember(member);
+    const banned = await tryBanMember(member);
+    if (banned) return;
+
+    const kicked = await tryKickTooYoungAccount(member);
+    if (kicked) return;
   } finally {
     setMonitoringPresence();
   }
@@ -143,6 +182,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         break;
       case "regex-list":
         await handleList(interaction);
+        break;
+      case "settings-get":
+        await handleSettingsGet(interaction);
+        break;
+      case "settings-set":
+        await handleSettingsSet(interaction);
         break;
     }
   } catch (err) {
@@ -210,6 +255,55 @@ async function handleAdd(interaction: ChatInputCommandInteraction): Promise<void
       `ID: \`${newRule.id}\`\n` +
       `Cible: \`${newRule.target}\`\n` +
       `Regex: \`/${newRule.pattern}/${newRule.flags}\``,
+    ephemeral: true
+  });
+}
+
+async function handleSettingsGet(interaction: ChatInputCommandInteraction): Promise<void> {
+  if (!isAdmin(interaction)) {
+    await interaction.reply({
+      content: "Tu dois être administrateur pour utiliser cette commande.",
+      ephemeral: true
+    });
+    return;
+  }
+
+  const settings = readSettings();
+
+  await interaction.reply({
+    content: `NotBeforeInDays vaut actuellement \`${settings.NotBeforeInDays}\`.`,
+    ephemeral: true
+  });
+}
+
+async function handleSettingsSet(interaction: ChatInputCommandInteraction): Promise<void> {
+  if (!isAdmin(interaction)) {
+    await interaction.reply({
+      content: "Tu dois être administrateur pour utiliser cette commande.",
+      ephemeral: true
+    });
+    return;
+  }
+
+  const value = interaction.options.getInteger("not_before_in_days", true);
+
+  if (value < 0) {
+    await interaction.reply({
+      content: "La valeur doit être supérieure ou égale à 0.",
+      ephemeral: true
+    });
+    return;
+  }
+
+  const settings = readSettings();
+  settings.NotBeforeInDays = value;
+  writeSettings(settings);
+
+  await interaction.reply({
+    content:
+      value === 0
+        ? "NotBeforeInDays est maintenant désactivé."
+        : `NotBeforeInDays vaut maintenant \`${value}\` jour(s).`,
     ephemeral: true
   });
 }
